@@ -36,7 +36,7 @@ if (!$user) {
     die("Error: No user found for this order.");
 }
 
-$subject = "Your Order has been Delivered";
+$subject = "Your Order is being Delivered";
 $message = "Hello {$order['name']},\n\n";
 $message .= "Thank you for your order with us. Here are your order details:\n";
 $message .= "Order ID: {$order['id']}\n";

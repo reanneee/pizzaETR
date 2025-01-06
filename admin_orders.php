@@ -60,45 +60,88 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
 
         error_log("Order items fetched successfully");
 
+        // while ($item = mysqli_fetch_assoc($order_items_result)) {
+        //     $product_id = mysqli_real_escape_string($conn, $item['product_id']);
+        //     $quantity = mysqli_real_escape_string($conn, $item['quantity']);
+        //     $price = mysqli_real_escape_string($conn, $item['price']);
+
+        //     error_log("Processing product ID: " . $product_id);
+
+        //     $check_product_query = "SELECT * FROM `sales` 
+        //                     WHERE product_id = '$product_id' 
+        //                     AND DATE(date) = CURDATE()";
+        //     $check_product_result = mysqli_query($conn, $check_product_query);
+
+        //     if (!$check_product_result) {
+        //         throw new Exception("Failed to check product in sales: " . mysqli_error($conn));
+        //     }
+
+        //     if (mysqli_num_rows($check_product_result) > 0) {
+        //         $update_sales_query = "UPDATE `sales` 
+        //                        SET qty = qty + '$quantity' 
+        //                        WHERE product_id = '$product_id' 
+        //                        AND DATE(date) = CURDATE()";
+        //         if (!mysqli_query($conn, $update_sales_query)) {
+        //             throw new Exception("Failed to update sales quantity: " . mysqli_error($conn));
+        //         }
+        //     } else {
+        //         $insert_sales_query = "INSERT INTO `sales` (product_id, qty, price, date) 
+        //                        VALUES ('$product_id', '$quantity', '$price', NOW())";
+        //         if (!mysqli_query($conn, $insert_sales_query)) {
+        //             throw new Exception("Failed to insert sales record: " . mysqli_error($conn));
+        //         }
+        //     }
+
+        //     $update_product_query = "UPDATE `products` 
+        //                      SET quantity = quantity - '$quantity' 
+        //                      WHERE id = '$product_id'";
+        //     if (!mysqli_query($conn, $update_product_query)) {
+        //         throw new Exception("Failed to update product quantity: " . mysqli_error($conn));
+        //     }
+
+        //     error_log("Sales record processed and product quantity updated successfully for product ID: " . $product_id);
+        // }
         while ($item = mysqli_fetch_assoc($order_items_result)) {
             $product_id = mysqli_real_escape_string($conn, $item['product_id']);
             $quantity = mysqli_real_escape_string($conn, $item['quantity']);
             $price = mysqli_real_escape_string($conn, $item['price']);
-
+            $size = mysqli_real_escape_string($conn, $item['size']);
+            
+            // Handle customizations
+            $customizations = NULL;
+            if (!empty($item['customizations'])) {
+                $customization_ids = explode(',', $item['customizations']);
+                // Clean and escape each customization ID
+                $cleaned_ids = array_map(function($cusID) use ($conn) {
+                    return mysqli_real_escape_string($conn, trim($cusID));
+                }, $customization_ids);
+                // Join the cleaned IDs back together
+                $customizations = implode(',', $cleaned_ids);
+            }
+        
             error_log("Processing product ID: " . $product_id);
-
-            $check_product_query = "SELECT * FROM `sales` 
-                            WHERE product_id = '$product_id' 
-                            AND DATE(date) = CURDATE()";
-            $check_product_result = mysqli_query($conn, $check_product_query);
-
-            if (!$check_product_result) {
-                throw new Exception("Failed to check product in sales: " . mysqli_error($conn));
+        
+            // Always insert a new row
+            $insert_sales_query = "INSERT INTO `sales` (product_id, sizeID, cusIDs, qty, price, date) 
+                           VALUES ('$product_id', 
+                                   '$size', 
+                                   " . ($customizations ? "'$customizations'" : "NULL") . ", 
+                                   '$quantity', 
+                                   '$price', 
+                                   NOW())";
+                                   
+            if (!mysqli_query($conn, $insert_sales_query)) {
+                throw new Exception("Failed to insert sales record: " . mysqli_error($conn));
             }
-
-            if (mysqli_num_rows($check_product_result) > 0) {
-                $update_sales_query = "UPDATE `sales` 
-                               SET qty = qty + '$quantity' 
-                               WHERE product_id = '$product_id' 
-                               AND DATE(date) = CURDATE()";
-                if (!mysqli_query($conn, $update_sales_query)) {
-                    throw new Exception("Failed to update sales quantity: " . mysqli_error($conn));
-                }
-            } else {
-                $insert_sales_query = "INSERT INTO `sales` (product_id, qty, price, date) 
-                               VALUES ('$product_id', '$quantity', '$price', NOW())";
-                if (!mysqli_query($conn, $insert_sales_query)) {
-                    throw new Exception("Failed to insert sales record: " . mysqli_error($conn));
-                }
-            }
-
+        
+            // Update product quantity
             $update_product_query = "UPDATE `products` 
                              SET quantity = quantity - '$quantity' 
                              WHERE id = '$product_id'";
             if (!mysqli_query($conn, $update_product_query)) {
                 throw new Exception("Failed to update product quantity: " . mysqli_error($conn));
             }
-
+        
             error_log("Sales record processed and product quantity updated successfully for product ID: " . $product_id);
         }
 
@@ -489,39 +532,40 @@ if (isset($_GET['delete'])) {
                 <?php
                 if ($ordersResult && mysqli_num_rows($ordersResult) > 0) {
                     echo "<table class='custom-table'>
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Placed on</th>
-                <th>Name</th>
-                <th>Number</th>
-                <th>Address</th>
-                <th>Total Products</th>
-                <th>Total Price</th>
-                <th>Payment Method</th>
-                <th>Payment Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>";
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Placed on</th>
+            <th>Name</th>
+            <th>Number</th>
+            <th>Address</th>
+            <th>Total Products</th>
+            <th>Total Price</th>
+            <th>Payment Method</th>
+            <th>Payment Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>";
 
                     while ($order = mysqli_fetch_assoc($ordersResult)) {
-                        $user_id = $order['user_id'];
-                        $user_email_query = "SELECT email FROM `user` WHERE id = ?";
-                        $stmt = $conn->prepare($user_email_query);
-                        $stmt->bind_param("i", $user_id);
-                        $stmt->execute();
-                        $user_email_result = $stmt->get_result();
-                        $user_email = $user_email_result->fetch_assoc()['email'] ?? '';
+                        $user_id = mysqli_real_escape_string($conn, $order['user_id']);
 
-                        $order_items_query = "SELECT * FROM `order_items` WHERE order_id = ?";
-                        $stmt = $conn->prepare($order_items_query);
-                        $stmt->bind_param("i", $order['id']);
-                        $stmt->execute();
-                        $order_items_result = $stmt->get_result();
+                        // Fetch user email
+                        $user_email_query = "SELECT email FROM `user` WHERE id = '$user_id'";
+                        $user_email_result = mysqli_query($conn, $user_email_query);
+                        $user_email = '';
+                        if ($user_email_result && $email_row = mysqli_fetch_assoc($user_email_result)) {
+                            $user_email = $email_row['email'];
+                        }
+
+                        // Fetch order items
+                        $order_id = mysqli_real_escape_string($conn, $order['id']);
+                        $order_items_query = "SELECT * FROM `order_items` WHERE order_id = '$order_id'";
+                        $order_items_result = mysqli_query($conn, $order_items_query);
 
                         $total_products_details = '';
-                        while ($item = $order_items_result->fetch_assoc()) {
+                        while ($item = mysqli_fetch_assoc($order_items_result)) {
                             $size = htmlspecialchars($item['size']);
                             $customizations_display = "No customizations";
 
@@ -530,14 +574,12 @@ if (isset($_GET['delete'])) {
                                 $customization_names = [];
 
                                 foreach ($customization_ids as $cusID) {
-                                    $cusID = trim($cusID);
-                                    $customization_query = "SELECT cusName FROM `customization` WHERE cusID = ?";
-                                    $stmt = $conn->prepare($customization_query);
-                                    $stmt->bind_param("s", $cusID);
-                                    $stmt->execute();
-                                    $customization_result = $stmt->get_result();
-                                    if ($row = $customization_result->fetch_assoc()) {
-                                        $customization_names[] = htmlspecialchars($row['cusName']);
+                                    $cusID = mysqli_real_escape_string($conn, trim($cusID));
+                                    $customization_query = "SELECT cusName FROM `customization` WHERE cusID = '$cusID'";
+                                    $customization_result = mysqli_query($conn, $customization_query);
+
+                                    if ($customization_result && $cus_row = mysqli_fetch_assoc($customization_result)) {
+                                        $customization_names[] = htmlspecialchars($cus_row['cusName']);
                                     }
                                 }
 
@@ -548,39 +590,41 @@ if (isset($_GET['delete'])) {
                         }
 
                         echo "<tr>
-            <td>#{$order['id']}</td>
-            <td>" . htmlspecialchars($order['placed_on']) . "</td>
-            <td>" . htmlspecialchars($order['name']) . "</td>
-            <td>" . htmlspecialchars($order['number']) . "</td>
-            <td>" . htmlspecialchars($order['address']) . "</td>
-            <td>{$total_products_details}</td>
-            <td class='price-cell'>₱ " . number_format($order['total_price'], 2) . "</td>
-            <td>" . htmlspecialchars($order['method']) . "</td>
-            <td>";
+        <td>#{$order['id']}</td>
+        <td>" . htmlspecialchars($order['placed_on']) . "</td>
+        <td>" . htmlspecialchars($order['name']) . "</td>
+        <td>" . htmlspecialchars($order['number']) . "</td>
+        <td>" . htmlspecialchars($order['address']) . "</td>
+        <td>{$total_products_details}</td>
+        <td class='price-cell'>₱ " . number_format($order['total_price'], 2) . "</td>
+        <td>" . htmlspecialchars($order['method']) . "</td>
+        <td>";
 
                         if ($order['payment_status'] == 'completed') {
                             echo "<button class='completed-btn' disabled>Completed</button>";
                         } else {
                             echo "<form class='payment-form' onsubmit='return false;'>
-                <input type='hidden' name='order_id' value='{$order['id']}'>
-                <button type='button' class='mark-completed-btn' onclick='updatePaymentStatus(this)'>Mark as Completed</button>
-                </form>";
+            <input type='hidden' name='order_id' value='{$order['id']}'>
+            <button type='button' class='mark-completed-btn' onclick='updatePaymentStatus(this)'>Mark as Completed</button>
+            </form>";
                         }
 
                         echo "</td>
-            <td class='actions-cell'>
-                <a href='admin_orders.php?delete=" . htmlspecialchars($order['id']) . "' class='delete-btn' onclick='return confirm(\"Delete this order?\");'>
-                    <i class='fa fa-trash'></i>
-                </a>
-                <a href='send_order_email.php?order_id=" . htmlspecialchars($order['id']) . "&email=" . htmlspecialchars($user_email) . "' class='send-email-btn'><button type='submit' name='send' class='deliver-btn'>Notify</button></a>
-            </td>
-            </tr>";
+        <td class='actions-cell'>
+            <a href='admin_orders.php?delete=" . htmlspecialchars($order['id']) . "' class='delete-btn' onclick='return confirm(\"Delete this order?\");'>
+                <i class='fa fa-trash'></i>
+            </a>
+            <a href='send_order_email.php?order_id=" . htmlspecialchars($order['id']) . "&email=" . htmlspecialchars($user_email) . "' class='send-email-btn'><button type='submit' name='send' class='deliver-btn'>Notify</button></a>
+        </td>
+        </tr>";
                     }
+
                     echo "</tbody></table>";
                 } else {
                     echo "<div class='alert-info'>No orders placed yet!</div>";
                 }
                 ?>
+
             </div>
 
             <script type="text/javascript">
@@ -660,15 +704,30 @@ if (isset($_GET['delete'])) {
                     document.querySelectorAll('table tbody tr').forEach(row => {
                         const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
                         const address = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-                        const paymentStatus = row.querySelector('td:nth-child(9)').textContent.toLowerCase();
+
+                        const statusCell = row.querySelector('td:nth-child(9)');
+                        const completedButton = statusCell.querySelector('.completed-btn');
+                        const pendingButton = statusCell.querySelector('.mark-completed-btn');
+
+                        let currentStatus = '';
+                        if (completedButton) {
+                            currentStatus = 'completed';
+                        } else if (pendingButton) {
+                            currentStatus = 'pending';
+                        }
+
                         const matchesSearch = name.includes(searchTerm) || address.includes(searchTerm);
-                        const matchesFilter = !filterValue || paymentStatus === filterValue;
+                        const matchesFilter = !filterValue || currentStatus === filterValue;
 
                         row.style.display = matchesSearch && matchesFilter ? '' : 'none';
                     });
 
                     updateTotalCount();
                 }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    performSearch();
+                });
 
                 function updateTotalCount() {
                     const visibleRows = document.querySelectorAll('table tbody tr[style=""]').length;
@@ -683,11 +742,31 @@ if (isset($_GET['delete'])) {
 
                 statusFilter.addEventListener('change', performSearch);
 
-
                 function updateTotalCount() {
-                    const visibleRows = document.querySelectorAll('table tbody tr[style=""]').length;
-                    document.querySelector('.total-items').textContent = `Total: ${visibleRows}`;
+
+                    const allRows = document.querySelectorAll('table tbody tr');
+
+                    const visibleRows = Array.from(allRows).filter(row => row.style.display !== 'none');
+
+                    document.querySelector('.total-items').textContent = `Total: ${visibleRows.length}`;
                 }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    updateTotalCount();
+                });
+
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(() => {
+                        performSearch();
+                        updateTotalCount();
+                    }, 300);
+                });
+
+                statusFilter.addEventListener('change', function() {
+                    performSearch();
+                    updateTotalCount();
+                });
 
                 searchInput.addEventListener('input', performSearch);
                 statusFilter.addEventListener('change', performSearch);

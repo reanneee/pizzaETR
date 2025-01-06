@@ -23,8 +23,12 @@ if (isset($_POST['add_to_favorites'])) {
                              VALUES ('$user_id', '$pid', '$name', '$price', '$image')";
             
             if (mysqli_query($conn, $insert_query)) {
-                echo "<script>alert('Product added to favorites');</script>";
-                echo "window.location = 'customer_menu.php'";
+                // echo "<script>alert('Product added to favorites'); window.location.reload();</script>";
+                echo "<script>
+                alert('Product added to favorites');
+                window.location.href = 'customer_menu.php';
+            </script>";
+
             } else {
                 echo "<script>alert('Failed to add to favorites');</script>";
             }

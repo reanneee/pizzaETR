@@ -82,6 +82,7 @@ if (isset($_GET['delete'])) {
         echo 'Item not found or unauthorized action.';
     }
 }
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = !empty($_POST['name']) ? mysqli_real_escape_string($conn, $_POST['name']) : null;
     $number = !empty($_POST['number']) ? mysqli_real_escape_string($conn, $_POST['number']) : null;
@@ -91,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $placed_on = date('Y-m-d H:i:s'); 
 
     $columns = ['user_id', 'placed_on', 'payment_status'];
-    $values = [$user_id, "'$placed_on'", "'Pending'"];
+    $values = [$user_id, "'$placed_on'", "'pending'"];
 
     if ($name !== null) {
         $columns[] = 'name';
@@ -122,42 +123,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $values_str = implode(', ', $values);
 
     $insert_order_query = "INSERT INTO orders ($columns_str) VALUES ($values_str)";
-    if (mysqli_query($conn, $insert_order_query)) {
-        $order_id = mysqli_insert_id($conn);
 
-        $select_cart_query = "SELECT id, pid, name, price, quantity, sizeID, customIDS FROM cart WHERE user_id = '$user_id'";
-        $result_cart = mysqli_query($conn, $select_cart_query);
+if (mysqli_query($conn, $insert_order_query)) {
+    $order_id = mysqli_insert_id($conn);
 
-        if ($result_cart && mysqli_num_rows($result_cart) > 0) {
-            while ($fetch_cart = mysqli_fetch_assoc($result_cart)) {
-                $customizations = '';
-                if (!empty($fetch_cart['customIDS'])) {
-                    $custom_ids = explode(',', $fetch_cart['customIDS']);
-                    $customizations = implode(',', array_map('intval', $custom_ids));
-                }
+    $select_cart_query = "SELECT id, pid, name, price, quantity, sizeID, customIDS FROM cart WHERE user_id = '$user_id'";
+    $result_cart = mysqli_query($conn, $select_cart_query); 
 
-                $insert_item_query = "INSERT INTO order_items (order_id, product_id, name, price, quantity, size, customizations) 
-                                      VALUES ('$order_id', '$fetch_cart[pid]', '$fetch_cart[name]', '$fetch_cart[price]', 
-                                              '$fetch_cart[quantity]', (SELECT sizename FROM size WHERE sizeID = '$fetch_cart[sizeID]'), 
-                                              '$customizations')";
-                mysqli_query($conn, $insert_item_query);
+    if ($result_cart && mysqli_num_rows($result_cart) > 0) {
+        while ($fetch_cart = mysqli_fetch_assoc($result_cart)) {
+            $customizations = '';
+            if (!empty($fetch_cart['customIDS'])) {
+                $custom_ids = explode(',', $fetch_cart['customIDS']);
+                $customizations = implode(',', array_map('intval', $custom_ids));
             }
-
-            $delete_cart_query = "DELETE FROM cart WHERE user_id = '$user_id'";
-            mysqli_query($conn, $delete_cart_query);
-
-            echo "<script>
-                    alert('Your order has been successfully placed!');
-                    window.location = 'cart.php';
-                  </script>";
-        } else {
-            echo "Error: Cart is empty.";
+            var_dump($fetch_cart['sizeID']);
+            $size_id = intval($fetch_cart['sizeID']);
+            $insert_item_query = "INSERT INTO order_items (order_id, product_id, name, price, quantity, size, customizations) 
+                                  VALUES ('$order_id', '$fetch_cart[pid]', '$fetch_cart[name]', '$fetch_cart[price]', 
+                                          '$fetch_cart[quantity]','$size_id', 
+                                          '$customizations')";
+            mysqli_query($conn, $insert_item_query);
         }
-    } else {
-        echo "Error: " . mysqli_error($conn);
-    }
-}
 
+        $delete_cart_query = "DELETE FROM cart WHERE user_id = '$user_id'";
+        mysqli_query($conn, $delete_cart_query);
+
+        echo "<script>
+                alert('Your order has been successfully placed!');
+                window.location = 'cart.php';
+              </script>";
+    } else {
+        echo "Error: Cart is empty.";
+    }
+} else {
+    echo "Error: " . mysqli_error($conn);
+}
+}
 ?>
 
 <!DOCTYPE html>

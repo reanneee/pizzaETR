@@ -219,7 +219,8 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
          $result_remove = mysqli_query($conn, $query_remove);
 
          if ($result_remove) {
-            echo '<script>alert("Item removed from favorites!");</script>';
+            echo '<script>alert("Item removed from favorites!"); </script>';
+            echo '<script>window.location.href = "customer_menu.php";</script>';
          } else {
             echo '<script>alert("Failed to remove item from favorites. Please try again.");</script>';
          }

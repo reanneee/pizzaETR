@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
         $row = mysqli_fetch_assoc($result);
 
         $_SESSION['user_id'] = $row['id'];
-
+        $_SESSION['message'] = 'Login Successfully!';
         header('location:index.php');
         exit();
     } else {
