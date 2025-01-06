@@ -3,13 +3,12 @@ session_start();
 include 'config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Debug: Print all POST data
     error_log("POST Data: " . print_r($_POST, true));
 
     $user_id = $_SESSION['user_id'];
     $product_id = $_POST['product_id'];
     $quantity = $_POST['quantity'];
-    $size_id = isset($_POST['size']) ? $_POST['size'] : '';  // Check if size is set
+    $size_id = isset($_POST['size']) ? $_POST['size'] : '';
     $base_price = $_POST['base_price'];
     
     error_log("Size ID: " . $size_id);
@@ -17,19 +16,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customIDS = '';
     if (isset($_POST['toppings']) && is_array($_POST['toppings'])) {
         $customIDS = implode(',', array_map('intval', $_POST['toppings']));
-        // Debug: Print customIDS
         error_log("Custom IDs: " . $customIDS);
     }
 
-    // Get product details
     $product_query = "SELECT name, image FROM products WHERE id = '$product_id'";
     $product_result = mysqli_query($conn, $product_query);
     $product = mysqli_fetch_assoc($product_result);
 
-    // Calculate total price
     $total_price = $base_price;
 
-    // Get size price
     if (!empty($size_id)) {
         $size_query = "SELECT sizeprice FROM size WHERE sizeID = '$size_id'";
         $size_result = mysqli_query($conn, $size_query);
@@ -38,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Add customization prices
     if (!empty($customIDS)) {
         $customization_query = "SELECT cusPrice FROM customization WHERE cusID IN ($customIDS)";
         $customization_result = mysqli_query($conn, $customization_query);
@@ -47,15 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Multiply by quantity
     $total_price *= $quantity;
 
-    // Insert query with explicit sizeID and customIDS
     $insert_query = "INSERT INTO cart (user_id, pid, name, price, quantity, image, sizeID, customIDS) 
                     VALUES ('$user_id', '$product_id', '{$product['name']}', '$total_price', 
                             '$quantity', '{$product['image']}', '$size_id', '$customIDS')";
-    
-    // Debug: Print the insert query
+
     error_log("Insert Query: " . $insert_query);
 
     $result = mysqli_query($conn, $insert_query);

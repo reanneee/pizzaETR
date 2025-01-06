@@ -13,11 +13,7 @@ include 'customer_header.php';
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Paquito's Pizza</title>
    <link rel="icon" type="image/png" href="images/pizzalogo32x32.png">
-
-   <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -30,21 +26,21 @@ include 'customer_header.php';
          <img src="images/order to bake.png" alt="">
          <h3>Order to Bake</h3>
          <p style="margin-bottom: 15px;">"Order to Make" service, simply select your favorite pizza from our tempting menu, and we'll start crafting it immediately. No waiting required! Preparing your pizza right away, ensuring it's made to perfection with fresh ingredients</p>
-         <a href="#menu" class="btn">Our menu</a>
+         <a href="customer_menu.php" class="btn">Our menu</a>
       </div>
 
       <div class="box">
          <img src="images/dine-delivery.png" alt="">
          <h3>Serve Dine-In or for Delivery</h3>
          <p>Prefer to dine in? Visit our cozy restaurant ambiance, where you can savor your pizza hot out of the oven. If you're staying in, no worries! We offer convenient delivery options straight to your doorstep. </p>
-         <a href="#menu" class="btn">Our menu</a>
+         <a href="customer_menu.php" class="btn">Our menu</a>
       </div>
 
       <div class="box">
          <img src="images/Share with friends.png" alt="">
          <h3>Share with Friends</h3>
          <p>Pizza is best enjoyed with good company! Invite your friends over for a pizza party and share the joy of Paquito's delicious creations. With a variety of flavors to choose from. Let the good times and great pizza roll!</p>
-         <a href="#menu" class="btn">Our menu</a>
+         <a href="customer_menu.php" class="btn">Our menu</a>
       </div>
    </div>
 </section>

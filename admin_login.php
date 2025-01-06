@@ -1,34 +1,26 @@
 <?php
-// Include the database configuration file
 include 'config.php';
 
 session_start();
 
 if (isset($_POST['login'])) {
 
-    // Get and sanitize input data
     $name = $_POST['name'];
     $name = filter_var($name, FILTER_SANITIZE_STRING);
-    $pass = sha1($_POST['pass']); // Hashing the password using SHA1 (not recommended for modern apps, consider using password_hash())
+    $pass = sha1($_POST['pass']);
     $pass = filter_var($pass, FILTER_SANITIZE_STRING);
 
-    // Prepare the SQL query to fetch the admin record
     $select_admin_query = "SELECT * FROM `admin` WHERE name = '$name' AND password = '$pass'";
 
-    // Execute the query
     $result = mysqli_query($conn, $select_admin_query);
 
-    // Check if any record is found
     if (mysqli_num_rows($result) > 0) {
-        // Fetch the result
         $row = mysqli_fetch_assoc($result);
 
-        // Set session variable to log the user in
         $_SESSION['admin_id'] = $row['id'];
         header('location: admin_page.php');
-        exit(); // Always call exit after a redirect
+        exit(); 
     } else {
-        // If no match is found, show error message
         $message[] = 'Incorrect username or password!';
     }
 }
@@ -42,17 +34,14 @@ if (isset($_POST['login'])) {
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Admin Login</title>
 
-   <!-- Font Awesome CDN link -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
-   <!-- Custom Admin Style link -->
    <link rel="stylesheet" href="css/admin_style.css">
 
 </head>
 <body>
 
 <?php
-// Display message if set
 if (isset($message)) {
     foreach ($message as $msg) {
         echo '

@@ -8,14 +8,11 @@ if (!isset($admin_id)) {
     header('location:admin_login.php');
 }
 
-// Initialize filter variables
 $product_name = isset($_POST['product_name']) ? $_POST['product_name'] : '';
 $start_date = isset($_POST['start_date']) ? $_POST['start_date'] : '';
 $end_date = isset($_POST['end_date']) ? $_POST['end_date'] : '';
 
-// Build the WHERE clause for filtering
-$where_clause = "WHERE 1"; // Default condition
-
+$where_clause = "WHERE 1";
 if (!empty($product_name)) {
     $product_name = mysqli_real_escape_string($conn, $product_name);
     $where_clause .= " AND p.name LIKE '%$product_name%'";
@@ -25,7 +22,6 @@ if (!empty($start_date) && !empty($end_date)) {
     $where_clause .= " AND s.date BETWEEN '$start_date' AND '$end_date'";
 }
 
-// Fetch sales data from the database with filtering
 $salesQuery = "SELECT p.name AS product_name, s.qty, s.price, s.date
                FROM sales s
                JOIN products p ON s.product_id = p.id
@@ -44,10 +40,8 @@ $salesResult = $conn->query($salesQuery);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Report</title>
 
-    <!-- Font Awesome CDN Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
-    <!-- Custom Admin Style Link -->
     <link rel="stylesheet" href="css/admin_style.css">
     <style>
       main {
@@ -243,7 +237,6 @@ $salesResult = $conn->query($salesQuery);
 
 <h1 class="heading">Sales Summary Report</h1>
 
-<!-- Filter Form -->
 <form method="POST" action="" class="filter-form">
     <div class="form-group">
         <label for="product_name">Product Name</label>

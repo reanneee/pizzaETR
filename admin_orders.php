@@ -8,32 +8,10 @@ if (!isset($admin_id)) {
     header('location:admin_login.php');
 }
 
-// Search and Filter Logic
+
 $searchQuery = '';
 $paymentStatusFilter = '';
 
-// if (isset($_POST['search'])) {
-//     $searchQuery = $_POST['search_query'];
-// }
-
-// if (isset($_POST['filter_payment'])) {
-//     $paymentStatusFilter = $_POST['payment_status_filter'];
-// }
-
-// // Fetch orders with optional search and filter
-// $query = "SELECT * FROM `orders` WHERE 1";
-
-// if ($searchQuery) {
-//     $searchQuery = filter_var($searchQuery, FILTER_SANITIZE_STRING);
-//     $query .= " AND (name LIKE '%$searchQuery%' OR address LIKE '%$searchQuery%')";
-// }
-
-// if ($paymentStatusFilter) {
-//     $paymentStatusFilter = filter_var($paymentStatusFilter, FILTER_SANITIZE_STRING);
-//     $query .= " AND payment_status = '$paymentStatusFilter'";
-// }
-
-// $ordersResult = mysqli_query($conn, $query);
 if (isset($_POST['search_query'])) {
     $searchQuery = $_POST['search_query'];
 }
@@ -52,7 +30,6 @@ if ($paymentStatusFilter) {
 
 $ordersResult = mysqli_query($conn, $sql);
 
-// Handle AJAX request
 if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
     header('Content-Type: application/json');
     $response = array('status' => 'error', 'message' => '');
@@ -60,13 +37,10 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
     try {
         $order_id = mysqli_real_escape_string($conn, $_POST['order_id']);
 
-        // Debug log
         error_log("Processing order ID: " . $order_id);
 
-        // Begin transaction
         mysqli_begin_transaction($conn);
 
-        // Update payment status in the orders table
         $update_payment_query = "UPDATE `orders` SET payment_status = 'completed' WHERE id = '$order_id'";
         if (!mysqli_query($conn, $update_payment_query)) {
             throw new Exception("Failed to update payment status: " . mysqli_error($conn));
@@ -74,7 +48,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
 
         error_log("Payment status updated successfully");
 
-        // Fetch the order items for this order
         $order_items_query = "SELECT oi.*, p.name as product_name 
                             FROM `order_items` oi 
                             JOIN `products` p ON oi.product_id = p.id 
@@ -87,7 +60,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
 
         error_log("Order items fetched successfully");
 
-        // Insert the order items into the sales table
         while ($item = mysqli_fetch_assoc($order_items_result)) {
             $product_id = mysqli_real_escape_string($conn, $item['product_id']);
             $quantity = mysqli_real_escape_string($conn, $item['quantity']);
@@ -95,7 +67,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
 
             error_log("Processing product ID: " . $product_id);
 
-            // Check if the product exists in sales for today
             $check_product_query = "SELECT * FROM `sales` 
                             WHERE product_id = '$product_id' 
                             AND DATE(date) = CURDATE()";
@@ -106,7 +77,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
             }
 
             if (mysqli_num_rows($check_product_result) > 0) {
-                // Update sales quantity for the product sold today
                 $update_sales_query = "UPDATE `sales` 
                                SET qty = qty + '$quantity' 
                                WHERE product_id = '$product_id' 
@@ -115,7 +85,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
                     throw new Exception("Failed to update sales quantity: " . mysqli_error($conn));
                 }
             } else {
-                // Insert new sales record for the product
                 $insert_sales_query = "INSERT INTO `sales` (product_id, qty, price, date) 
                                VALUES ('$product_id', '$quantity', '$price', NOW())";
                 if (!mysqli_query($conn, $insert_sales_query)) {
@@ -123,7 +92,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
                 }
             }
 
-            // Update product quantity in products table after the sale
             $update_product_query = "UPDATE `products` 
                              SET quantity = quantity - '$quantity' 
                              WHERE id = '$product_id'";
@@ -134,14 +102,12 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
             error_log("Sales record processed and product quantity updated successfully for product ID: " . $product_id);
         }
 
-        // Commit transaction
         mysqli_commit($conn);
 
         $response['status'] = 'success';
         $response['message'] = 'Payment status updated and sales data inserted successfully!';
         error_log("Transaction committed successfully");
     } catch (Exception $e) {
-        // Rollback transaction
         mysqli_rollback($conn);
         $response['message'] = $e->getMessage();
         error_log("Error in updatePaymentStatus: " . $e->getMessage());
@@ -153,7 +119,6 @@ if (isset($_POST['update_payment']) && isset($_POST['ajax'])) {
 
 if (isset($_GET['delete'])) {
     $delete_id = $_GET['delete'];
-    // Delete the order from the database
     $delete_order_query = "DELETE FROM `orders` WHERE id = '$delete_id'";
     mysqli_query($conn, $delete_order_query);
     header('location:admin_orders.php');
@@ -169,10 +134,8 @@ if (isset($_GET['delete'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders</title>
 
-    <!-- Font Awesome CDN Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
-    <!-- Custom Admin Style Link -->
     <link rel="stylesheet" href="css/admin_style.css">
     <style>
         main {
@@ -345,7 +308,6 @@ if (isset($_GET['delete'])) {
             text-align: center;
         }
 
-        /* Search and Filter Section */
         .search-filter {
             display: flex;
             gap: 1rem;
@@ -428,20 +390,7 @@ if (isset($_GET['delete'])) {
 
         .deliver-btn:active {
             background-color: #1e7e34;
-            /* Even darker green when pressed */
         }
-
-
-        /* .delete-btn, .deliver-btn {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
- 
-    text-decoration: none;
-    transition: all 0.2s;
-    height: 25px;
-    margin-top: 10px;
-} */
 
         .search-filter {
             margin-bottom: 2rem;
@@ -557,7 +506,6 @@ if (isset($_GET['delete'])) {
         <tbody>";
 
                     while ($order = mysqli_fetch_assoc($ordersResult)) {
-                        // Fetch user's email using the user_id
                         $user_id = $order['user_id'];
                         $user_email_query = "SELECT email FROM `user` WHERE id = ?";
                         $stmt = $conn->prepare($user_email_query);
@@ -566,7 +514,6 @@ if (isset($_GET['delete'])) {
                         $user_email_result = $stmt->get_result();
                         $user_email = $user_email_result->fetch_assoc()['email'] ?? '';
 
-                        // Fetch order items and their details
                         $order_items_query = "SELECT * FROM `order_items` WHERE order_id = ?";
                         $stmt = $conn->prepare($order_items_query);
                         $stmt->bind_param("i", $order['id']);
@@ -637,7 +584,6 @@ if (isset($_GET['delete'])) {
             </div>
 
             <script type="text/javascript">
-                // Function to alert the email before sending
                 function alertUserEmail(email) {
                     alert("The email that will be sent is to: " + email);
                 }
@@ -653,7 +599,6 @@ if (isset($_GET['delete'])) {
                         const cell = button.closest('td');
                         const errorDiv = cell.querySelector('.error-message');
 
-                        // Disable button and show processing state
                         button.disabled = true;
                         button.textContent = 'Processing...';
 
@@ -672,20 +617,17 @@ if (isset($_GET['delete'])) {
                         }
 
                         const data = await response.json();
-                        console.log('Server response:', data); // Debug log
+                        console.log('Server response:', data);
 
                         if (data.status === 'success') {
-                            // Replace the button with completed status
                             const completedBtn = document.createElement('button');
                             completedBtn.className = 'completed-btn';
                             completedBtn.disabled = true;
                             completedBtn.textContent = 'Completed';
 
-                            // Clear the cell and append the new button
                             cell.innerHTML = '';
                             cell.appendChild(completedBtn);
 
-                            // Show success message
                             alert(data.message || 'Payment status updated and sales data inserted!');
                         } else {
                             throw new Error(data.message || 'Failed to update payment status');
@@ -694,13 +636,11 @@ if (isset($_GET['delete'])) {
                     } catch (error) {
                         console.error('Error in updatePaymentStatus:', error);
 
-                        // Show error in the UI
                         const errorDiv = button.closest('td').querySelector('.error-message');
                         if (errorDiv) {
                             errorDiv.textContent = error.message;
                         }
 
-                        // Reset button state
                         button.disabled = false;
                         button.textContent = 'Mark as Completed';
 
@@ -720,12 +660,10 @@ if (isset($_GET['delete'])) {
                     document.querySelectorAll('table tbody tr').forEach(row => {
                         const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
                         const address = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-                        const paymentStatus = row.querySelector('td:nth-child(9)').textContent.toLowerCase(); // Adjusted to check payment status from column 9
-
+                        const paymentStatus = row.querySelector('td:nth-child(9)').textContent.toLowerCase();
                         const matchesSearch = name.includes(searchTerm) || address.includes(searchTerm);
                         const matchesFilter = !filterValue || paymentStatus === filterValue;
 
-                        // Show row if it matches both search and filter
                         row.style.display = matchesSearch && matchesFilter ? '' : 'none';
                     });
 
@@ -738,14 +676,12 @@ if (isset($_GET['delete'])) {
                 }
 
                 searchInput.addEventListener('input', function() {
-                    // Clear any existing timeout before starting a new one
                     clearTimeout(debounceTimeout);
 
-                    // Set a timeout for 300ms to trigger the search function
                     debounceTimeout = setTimeout(performSearch, 300);
                 });
 
-                statusFilter.addEventListener('change', performSearch); // Trigger search when filter changes
+                statusFilter.addEventListener('change', performSearch);
 
 
                 function updateTotalCount() {
@@ -772,7 +708,7 @@ if (isset($_GET['delete'])) {
                                 if (paymentStatus === 'completed') {
                                     this.innerHTML = '<span class="completed-status">Completed</span>';
                                     alert('Payment status updated and sales data inserted!');
-                                    location.reload(); // Refresh to ensure database sync
+                                    location.reload();
                                 }
                             }
                         } catch (error) {

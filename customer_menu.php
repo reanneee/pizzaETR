@@ -3,31 +3,28 @@ include 'config.php';
 session_start();
 include 'customer_header.php';
 
-// Function to check if the product is already in favorites
 function isProductInFavorites($conn, $user_id, $product_id) {
     $query = "SELECT * FROM `favorites` WHERE `user_id` = '$user_id' AND `product_id` = '$product_id'";
     $result = mysqli_query($conn, $query);
     return mysqli_num_rows($result) > 0;
 }
 
-// Add to favorites functionality
 if (isset($_POST['add_to_favorites'])) {
     $pid = mysqli_real_escape_string($conn, $_POST['pid']);
-    $name = mysqli_real_escape_string($conn, $_POST['name']); // Escape special characters
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
     $price = mysqli_real_escape_string($conn, $_POST['price']);
     $image = mysqli_real_escape_string($conn, $_POST['image']);
 
-    // Assuming the user is logged in and their user ID is available
     if (isset($_SESSION['user_id'])) {
         $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
 
-        // Check if the product is already in favorites
         if (!isProductInFavorites($conn, $user_id, $pid)) {
             $insert_query = "INSERT INTO `favorites` (`user_id`, `product_id`, `name`, `price`, `image`) 
                              VALUES ('$user_id', '$pid', '$name', '$price', '$image')";
             
             if (mysqli_query($conn, $insert_query)) {
                 echo "<script>alert('Product added to favorites');</script>";
+                echo "window.location = 'customer_menu.php'";
             } else {
                 echo "<script>alert('Failed to add to favorites');</script>";
             }
@@ -102,11 +99,10 @@ if (isset($_POST['add_to_favorites'])) {
 
                         <button type="submit" class="favorite-btn" name="add_to_favorites" title="Add to Favorites">
                             <?php 
-                            // Check if product is already in favorites
                             if (isset($_SESSION['user_id']) && isProductInFavorites($conn, $_SESSION['user_id'], $fetch_products['id'])) {
-                                echo '<i class="fas fa-heart"></i>';  // Filled heart if in favorites
+                                echo '<i class="fas fa-heart"></i>'; 
                             } else {
-                                echo '<i class="far fa-heart"></i>';  // Empty heart if not in favorites
+                                echo '<i class="far fa-heart"></i>';
                             }
                             ?>
                         </button>
@@ -140,7 +136,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const priceButtons = document.querySelectorAll('.price-btn');
     const menuItems = document.querySelectorAll('.box');
 
-    // Debounce function
     function debounce(func, wait) {
         let timeout;
         return function(...args) {
@@ -149,30 +144,24 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // Main filter function
     function filterMenu() {
         const searchTerm = searchInput.value.toLowerCase().trim();
         const activePrice = document.querySelector('.price-btn.active').dataset.price;
 
         menuItems.forEach(item => {
-            // Get the product name - make sure we're selecting the correct element
             const nameElement = item.querySelector('.name');
             const name = nameElement ? nameElement.textContent.toLowerCase() : '';
             
-            // Get the price - clean up the price text and convert to number
             const priceElement = item.querySelector('.price');
             const priceText = priceElement ? priceElement.textContent.replace('₱', '').trim() : '0';
             const price = parseFloat(priceText);
 
-            // Search match condition
             const matchesSearch = name.includes(searchTerm);
 
-            // Price match condition
             const matchesPrice = getPriceRangeMatch(price, activePrice);
 
-            // Apply visibility based on both conditions
             if (matchesSearch && matchesPrice) {
-                item.style.display = 'block'; // or 'flex' depending on your layout
+                item.style.display = 'block';
                 setTimeout(() => {
                     item.style.opacity = '1';
                     item.style.transform = 'scale(1)';
@@ -186,11 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Update no results message
         updateNoResultsMessage();
     }
 
-    // Price range matching function
     function getPriceRangeMatch(price, activePrice) {
         switch (activePrice) {
             case 'all':
@@ -208,7 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // No results message function
     function updateNoResultsMessage() {
         const hasVisibleItems = Array.from(menuItems).some(
             item => item.style.display !== 'none'
@@ -231,9 +217,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Event listeners
     searchInput.addEventListener('input', debounce(() => {
-        console.log('Search term:', searchInput.value); // Debug line
+        console.log('Search term:', searchInput.value);
         filterMenu();
     }, 300));
     
@@ -245,14 +230,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize transitions
     menuItems.forEach(item => {
         item.style.transition = 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out';
         item.style.opacity = '1';
         item.style.transform = 'scale(1)';
     });
 
-    // Run initial filter
     filterMenu();
 });
     </script>

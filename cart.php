@@ -3,29 +3,28 @@ session_start();
 include 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('location:user_login.php');
+    echo '<script type="text/javascript">
+            alert("You are not logged in. Please login first.");
+            window.location = "index.php";
+          </script>';
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 
-// Handle quantity update with proper validation and price recalculation
 if (isset($_POST['cart_id']) && isset($_POST['cart_quantity'])) {
     $cart_id = mysqli_real_escape_string($conn, $_POST['cart_id']);
     $quantity = mysqli_real_escape_string($conn, $_POST['cart_quantity']);
     
-    // Validate quantity
     if (!is_numeric($quantity) || $quantity < 1) {
         echo 'error';
         exit();
     }
 
-    // First, verify the cart item belongs to the user
     $verify_query = "SELECT * FROM cart WHERE id = '$cart_id' AND user_id = '$user_id'";
     $verify_result = mysqli_query($conn, $verify_query);
 
     if (mysqli_num_rows($verify_result) > 0) {
-        // Update the quantity
         $update_query = "UPDATE cart SET quantity = '$quantity' WHERE id = '$cart_id' AND user_id = '$user_id'";
         if (mysqli_query($conn, $update_query)) {
             echo 'success';
@@ -38,7 +37,6 @@ if (isset($_POST['cart_id']) && isset($_POST['cart_quantity'])) {
     exit();
 }
 
-//fetch 
 $cart_query = "SELECT c.*, sz.sizename, p.name as product_name, p.image
                FROM cart c 
                LEFT JOIN size sz ON c.sizeID = sz.sizeID 
@@ -65,19 +63,17 @@ if ($result_cart && mysqli_num_rows($result_cart) > 0) {
     $total_products = "No items in the cart.";
 }
 
-//delete
+
 if (isset($_GET['delete'])) {
     $delete_id = mysqli_real_escape_string($conn, $_GET['delete']);
     
-    // Verify the item belongs to the user
     $verify_query = "SELECT * FROM cart WHERE id = '$delete_id' AND user_id = '$user_id'";
     $verify_result = mysqli_query($conn, $verify_query);
 
     if (mysqli_num_rows($verify_result) > 0) {
-        // Delete the item from the cart
         $delete_query = "DELETE FROM cart WHERE id = '$delete_id' AND user_id = '$user_id'";
         if (mysqli_query($conn, $delete_query)) {
-            header('Location: cart.php'); // Redirect to refresh the cart page
+            header('Location: cart.php');
             exit();
         } else {
             echo 'Error deleting the item.';
@@ -86,17 +82,14 @@ if (isset($_GET['delete'])) {
         echo 'Item not found or unauthorized action.';
     }
 }
-//insert in orders and delete cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Collect form data
     $name = !empty($_POST['name']) ? mysqli_real_escape_string($conn, $_POST['name']) : null;
     $number = !empty($_POST['number']) ? mysqli_real_escape_string($conn, $_POST['number']) : null;
     $method = !empty($_POST['method']) ? mysqli_real_escape_string($conn, $_POST['method']) : null;
     $address = !empty($_POST['flat']) ? mysqli_real_escape_string($conn, $_POST['flat']) : null;
     $total_price = !empty($_POST['total_price']) ? mysqli_real_escape_string($conn, $_POST['total_price']) : null;
-    $placed_on = date('Y-m-d H:i:s'); // current date and time
+    $placed_on = date('Y-m-d H:i:s'); 
 
-    // Build the query with only non-empty values
     $columns = ['user_id', 'placed_on', 'payment_status'];
     $values = [$user_id, "'$placed_on'", "'Pending'"];
 
@@ -125,30 +118,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $values[] = "'$total_price'";
     }
 
-    // Convert columns and values into SQL format
     $columns_str = implode(', ', $columns);
     $values_str = implode(', ', $values);
 
-    // Insert the order into the orders table
     $insert_order_query = "INSERT INTO orders ($columns_str) VALUES ($values_str)";
     if (mysqli_query($conn, $insert_order_query)) {
-        // Get the last inserted order_id
         $order_id = mysqli_insert_id($conn);
 
-        // Collect the cart item IDs
         $select_cart_query = "SELECT id, pid, name, price, quantity, sizeID, customIDS FROM cart WHERE user_id = '$user_id'";
         $result_cart = mysqli_query($conn, $select_cart_query);
 
         if ($result_cart && mysqli_num_rows($result_cart) > 0) {
             while ($fetch_cart = mysqli_fetch_assoc($result_cart)) {
-                // Handle customizations
                 $customizations = '';
                 if (!empty($fetch_cart['customIDS'])) {
                     $custom_ids = explode(',', $fetch_cart['customIDS']);
                     $customizations = implode(',', array_map('intval', $custom_ids));
                 }
 
-                // Insert each cart item into the order_items table using the new order_id
                 $insert_item_query = "INSERT INTO order_items (order_id, product_id, name, price, quantity, size, customizations) 
                                       VALUES ('$order_id', '$fetch_cart[pid]', '$fetch_cart[name]', '$fetch_cart[price]', 
                                               '$fetch_cart[quantity]', (SELECT sizename FROM size WHERE sizeID = '$fetch_cart[sizeID]'), 
@@ -156,20 +143,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 mysqli_query($conn, $insert_item_query);
             }
 
-            // Clear the cart after placing the order
             $delete_cart_query = "DELETE FROM cart WHERE user_id = '$user_id'";
             mysqli_query($conn, $delete_cart_query);
 
-            // Display success message using JavaScript
             echo "<script>
                     alert('Your order has been successfully placed!');
+                    window.location = 'cart.php';
                   </script>";
         } else {
-            // Handle case when cart is empty or invalid
             echo "Error: Cart is empty.";
         }
     } else {
-        // Handle any error with the order insertion
         echo "Error: " . mysqli_error($conn);
     }
 }
@@ -206,7 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <?php if (mysqli_num_rows($cart_result) > 0):
                     while ($item = mysqli_fetch_assoc($cart_result)):
-                        // Get customization names
                         $customization_names = [];
                         if (!empty($item['customIDS'])) {
                             $custom_ids = explode(',', $item['customIDS']);
@@ -322,12 +305,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     const newValue = parseInt(input.value) + change;
     
     if (newValue >= 1) {
-        // Create form data
         const formData = new FormData();
         formData.append('cart_id', itemId);
         formData.append('cart_quantity', newValue);
 
-        // Send AJAX request
         fetch('cart.php', {
             method: 'POST',
             body: formData
@@ -335,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .then(response => response.text())
         .then(data => {
             if (data === 'success') {
-                window.location.reload(); // Reload the page to update all totals
+                window.location.reload();
             } else {
                 console.log('Server response:', data);
             }
@@ -346,7 +327,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Add event listeners for direct input changes
 document.querySelectorAll('.quantity-input').forEach(input => {
     input.addEventListener('change', function() {
         const itemId = this.id.replace('qty_', '');
@@ -355,7 +335,7 @@ document.querySelectorAll('.quantity-input').forEach(input => {
     });
 });
 
-// Add event listeners for direct input changes
+
 document.querySelectorAll('.quantity-input').forEach(input => {
     input.addEventListener('change', function() {
         const itemId = this.id.replace('qty_', '');
@@ -381,12 +361,10 @@ document.querySelectorAll('.quantity-input').forEach(input => {
     const newValue = parseInt(input.value) + change;
     
     if (newValue >= 1) {
-        // Create form data
         const formData = new FormData();
         formData.append('cart_id', itemId);
         formData.append('cart_quantity', newValue);
 
-        // Send AJAX request
         fetch('cart.php', {
             method: 'POST',
             body: formData
@@ -394,7 +372,7 @@ document.querySelectorAll('.quantity-input').forEach(input => {
         .then(response => response.text())
         .then(data => {
             if (data === 'success') {
-                window.location.reload(); // Reload the page to update all totals
+                window.location.reload();
             } else {
                 console.log('Server response:', data);
             }
@@ -405,7 +383,6 @@ document.querySelectorAll('.quantity-input').forEach(input => {
     }
 }
 
-// Add event listeners for direct input changes
 document.querySelectorAll('.quantity-input').forEach(input => {
     input.addEventListener('change', function() {
         const itemId = this.id.replace('qty_', '');
@@ -414,7 +391,6 @@ document.querySelectorAll('.quantity-input').forEach(input => {
     });
 });
 
-// Add event listeners for direct input changes
 document.querySelectorAll('.quantity-input').forEach(input => {
     input.addEventListener('change', function() {
         const itemId = this.id.replace('qty_', '');

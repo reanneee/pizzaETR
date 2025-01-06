@@ -30,7 +30,6 @@ if (isset($_POST['register'])) {
    $cpass = sha1($_POST['cpass']);
    $cpass = filter_var($cpass, FILTER_SANITIZE_STRING);
 
-   // Check if user already exists using mysqli_query
    $select_user = mysqli_prepare($conn, "SELECT * FROM `user` WHERE name = ? AND email = ?");
    mysqli_stmt_bind_param($select_user, "ss", $name, $email);
    mysqli_stmt_execute($select_user);
@@ -104,19 +103,16 @@ if (isset($_POST['order'])) {
       $total_price = $_POST['total_price'];
       $total_products = $_POST['total_products'];
 
-      // Check if cart is not empty using mysqli_query
       $select_cart = mysqli_prepare($conn, "SELECT * FROM `cart` WHERE user_id = ?");
       mysqli_stmt_bind_param($select_cart, "i", $user_id);
       mysqli_stmt_execute($select_cart);
       $result_cart = mysqli_stmt_get_result($select_cart);
 
       if (mysqli_num_rows($result_cart) > 0) {
-         // Insert order
          $insert_order = mysqli_prepare($conn, "INSERT INTO `orders`(user_id, name, number, method, address, total_products, total_price) VALUES(?,?,?,?,?,?,?)");
          mysqli_stmt_bind_param($insert_order, "isssssd", $user_id, $name, $number, $method, $address, $total_products, $total_price);
          mysqli_stmt_execute($insert_order);
 
-         // Delete cart after order placed
          $delete_cart = mysqli_prepare($conn, "DELETE FROM `cart` WHERE user_id = ?");
          mysqli_stmt_bind_param($delete_cart, "i", $user_id);
          mysqli_stmt_execute($delete_cart);
@@ -133,7 +129,6 @@ if (isset($_POST['order'])) {
 
 
 
-<!-- favorites logic -->
 <?php
 
 if (isset($_POST['add_to_favorites'])) {
@@ -193,11 +188,7 @@ function isProductInFavorites($conn, $user_id, $product_id) {
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Paquito's Pizza</title>
    <link rel="icon" type="image/png" href="images/pizzalogo32x32.png">
-
-   <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -241,7 +232,6 @@ function isProductInFavorites($conn, $user_id, $product_id) {
       </section>
    </div>
 
-   <!-- custom js file link  -->
    <script src="js/script.js"></script>
 
 

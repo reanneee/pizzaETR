@@ -54,13 +54,11 @@ if ($result) {
       <li><a href="admin_pizza_size.php"><i class="glyphicon glyphicon-indent-left"></i><span>Size</span></a></li>
       <li><a href="admin_customization.php"><i class="glyphicon glyphicon-indent-left"></i><span>Customization</span></a></li>
       <li><a href="admin_orders.php"><i class="glyphicon glyphicon-indent-left"></i><span>Orders</span></a></li>
-      <!-- <li><a href="admin_accounts.php"><i class="glyphicon glyphicon-indent-left"></i><span>Accounts</span></a></li> -->
       <li><a href="sales.php"><i class="glyphicon glyphicon-indent-left"></i><span>Sales</span></a></li>
       <li><a href="users_accounts.php"><i class="glyphicon glyphicon-indent-left"></i><span>Users</span></a></li>
    </ul>
 </div>
 
-<!-- CSS -->
 <style>
    .header .flex .logo {
     font-size: 2.5rem;

@@ -7,10 +7,8 @@
    <title>Paquito's Pizza</title>
    <link rel="icon" type="image/png" href="images/pizzalogo32x32.png">
 
-   <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>

@@ -9,12 +9,11 @@ $mail = new PHPMailer (true);
 $mail->isSMTP();
 $mail->Host = 'smtp.gmail.com';
 $mail->SMTPAuth = true;
-$mail->Username = 'paquitospizza0@gmail.com'; // Your
-$mail->Password = 'lphs lbzs vhhj ndvo'; // Your gr
-
+$mail->Username = 'paquitospizza0@gmail.com'; 
+$mail->Password = 'lphs lbzs vhhj ndvo'; 
 $mail->SMTPSecure = 'ssl';
 $mail->Port = 465;
-$mail->setFrom('paquitospizza0@gmail.com'); // Your gmail
+$mail->setFrom('paquitospizza0@gmail.com'); 
 $mail->addAddress($_POST["email"]);
 $mail->isHTML(true);
 $mail->Subject = $_POST["subject"];

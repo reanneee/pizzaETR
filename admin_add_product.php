@@ -28,10 +28,8 @@ if (isset($_POST['add_product'])) {
    $image_tmp_name = $_FILES['image']['tmp_name'];
    $image_folder = 'uploaded_img/' . $image;
 
-   // Get current date and time
    $created_at = date('Y-m-d H:i:s');
 
-   // Use mysqli_query instead of prepared statement
    $select_product_query = "SELECT * FROM `products` WHERE name = '$name'";
    $select_product_result = mysqli_query($conn, $select_product_query);
 
@@ -65,10 +63,8 @@ if (isset($_POST['add_product'])) {
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Add Product</title>
 
-   <!-- font awesome cdn link -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-   <!-- custom admin style link -->
    <link rel="stylesheet" href="css/admin_style.css">
    <style>
    html,

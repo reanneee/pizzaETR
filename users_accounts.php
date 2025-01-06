@@ -8,13 +8,11 @@ if (!isset($admin_id)) {
     header('location:admin_login.php');
 }
 
-// Fetch orders from the database
 $userResult = $conn->query("SELECT * FROM `user`");
 
 
 if (isset($_GET['delete'])) {
     $delete_id = $_GET['delete'];
-    // Delete the order from the database
     $delete_user= $conn->prepare("DELETE FROM `user` WHERE id = ?");
     $delete_user->execute([$delete_id]);
     header('location:admin_orders.php');
@@ -31,10 +29,8 @@ if (isset($_GET['delete'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users</title>
 
-    <!-- Font Awesome CDN Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
-    <!-- Custom Admin Style Link -->
     <link rel="stylesheet" href="css/admin_style.css">
     <style>
         main {

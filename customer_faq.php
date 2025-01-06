@@ -14,11 +14,7 @@ include 'customer_header.php';
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Paquito's Pizza</title>
    <link rel="icon" type="image/png" href="images/pizzalogo32x32.png">
-
-   <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -124,7 +120,8 @@ include 'customer_header.php';
          &copy; copyright @ <?= date('Y'); ?> <span> Paquito's Pizza. </span> | All rights reserved!
       </div>
 
-   </section><script>// script.js
+   </section>
+   <script>
 
 document.addEventListener("DOMContentLoaded", function () {
     const accordions = document.querySelectorAll('.accordion');
@@ -133,20 +130,20 @@ document.addEventListener("DOMContentLoaded", function () {
         const heading = accordion.querySelector('.accordion-heading');
 
         heading.addEventListener('click', function () {
-            // Toggle the active class for the accordion
             accordion.classList.toggle('active');
 
-            // Toggle the content visibility
             const content = accordion.querySelector('.accrodion-content');
             if (accordion.classList.contains('active')) {
-                content.style.maxHeight = content.scrollHeight + "px"; // Open the accordion
+                content.style.maxHeight = content.scrollHeight + "px"; 
             } else {
-                content.style.maxHeight = "0"; // Close the accordion
+                content.style.maxHeight = "0";
             }
         });
     });
 });
+
 </script>
+<script src="js/script.js"></script>
    
 
 </body>

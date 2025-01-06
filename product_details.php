@@ -3,11 +3,14 @@ include 'config.php';
 
 $productId = $_POST['pid'] ?? null;
 
+session_start();
+$is_logged_in = isset($_SESSION['user_id']) ? true : false; 
 
 if (!$productId) {
     header('Location: menu.php');
     exit();
 }
+
 
 
 $product_query = "SELECT * FROM products WHERE id = $productId";
@@ -245,12 +248,12 @@ $customization_result = mysqli_query($conn, $customization_query);
             object-fit: contain;
         }
 
-/* Style for the back button container (fixed position) */
+
 .back-button-container {
     position: fixed;
-    top: 20px; /* Adjust the vertical position */
-    left: 20px; /* Adjust the horizontal position */
-    z-index: 1000; /* Ensure the button stays above other content */
+    top: 20px; 
+    left: 20px; 
+    z-index: 1000; 
 }
 
 
@@ -268,6 +271,16 @@ $customization_result = mysqli_query($conn, $customization_query);
 .back-button:hover {
     background-color:#333333;
 }
+.disabled-btn {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .enabled-btn {
+        background-color: #008C3B;
+        cursor: pointer;
+    }
 
     </style>
 </head>
@@ -329,7 +342,17 @@ $customization_result = mysqli_query($conn, $customization_query);
                         <div class="total-section">
                             <span>Total: </span>
                             <div class="price">₱<span id="total-price"><?php echo number_format($product['price'], 2); ?></span></div>
-                            <button type="submit" class="order-btn">Add to Cart</button>
+                            <button type="submit" class="order-btn <?php echo (!$is_logged_in ? 'disabled-btn' : 'enabled-btn'); ?>" id="order-btn">
+                                Add to Cart
+                            </button>
+                            <script>
+                                document.getElementById('order-btn').addEventListener('click', function(event) {
+                                    if (!<?php echo json_encode($is_logged_in); ?>) {
+                                        event.preventDefault();
+                                        alert('You must be logged in to add items to the cart.');
+                                    }
+                                });
+                            </script>
                         </div>
                     </div>
                 </div>

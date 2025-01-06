@@ -1,15 +1,13 @@
 <?php
 
 if (isset($_GET['logout'])) {
-   session_unset(); // Clear session
-   session_destroy(); // Destroy session
-   header("Location: index.php"); // Redirect to index.php
-   exit(); // Always call exit after a header redirect
+   session_unset();
+   session_destroy();
+   header("Location: index.php"); 
+   exit();
 }
-// Check if the user is logged in and set $user_id
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
-// Display messages if any
 if (isset($message)) {
    foreach ($message as $message) {
       echo '
@@ -30,7 +28,6 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Home</title>
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -57,12 +54,10 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
             $total_favorites = 0;
 
             if (!empty($user_id)) {
-               // Fetch cart count
                $count_cart_query = "SELECT * FROM `cart` WHERE user_id = $user_id";
                $result_count_cart = mysqli_query($conn, $count_cart_query);
                $total_cart_items = mysqli_num_rows($result_count_cart);
 
-               // Fetch favorites count
                $count_favorites_query = "SELECT * FROM `favorites` WHERE user_id = $user_id";
                $result_count_favorites = mysqli_query($conn, $count_favorites_query);
                $total_favorites = mysqli_num_rows($result_count_favorites);
@@ -102,7 +97,7 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
             if ($user_id) {
                $select_cart_query = "SELECT * FROM `cart` WHERE user_id = ?";
                $stmt_cart = mysqli_prepare($conn, $select_cart_query);
-               mysqli_stmt_bind_param($stmt_cart, "i", $user_id); // "i" means integer type
+               mysqli_stmt_bind_param($stmt_cart, "i", $user_id);
                mysqli_stmt_execute($stmt_cart);
                $result_cart = mysqli_stmt_get_result($stmt_cart);
 
@@ -152,18 +147,17 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
 
          if (mysqli_num_rows($result_orders) > 0) {
             while ($fetch_orders = mysqli_fetch_assoc($result_orders)) {
-               // Fetch order items for the current order
                $order_items_query = "SELECT * FROM `order_items` WHERE order_id = '{$fetch_orders['id']}'";
                $order_items_result = mysqli_query($conn, $order_items_query);
 
                $total_products = 0;
                $total_price = 0;
-               $order_items_details = ''; // For displaying product details
+               $order_items_details = ''; 
 
                if ($order_items_result && mysqli_num_rows($order_items_result) > 0) {
                   while ($item = mysqli_fetch_assoc($order_items_result)) {
                      $total_products += $item['quantity'];
-                     $total_price += $item['price'] * $item['quantity']; // Assuming price is in the `order_items` table
+                     $total_price += $item['price'] * $item['quantity']; 
 
                      $size = $item['size'];
                      $customization_ids = explode(',', $item['customizations']);
@@ -196,7 +190,6 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
                         <p>Payment Status : <span style='color:" . ($fetch_orders['payment_status'] == 'pending' ? 'red' : 'green') . "'>{$fetch_orders['payment_status']}</span></p>
                         <div>{$order_items_details}</div>";
 
-               // Display cancel order button if payment is not completed
                if ($fetch_orders['payment_status'] == 'pending') {
                   echo "<form action='cancel_order.php' method='POST' onsubmit='return confirm(\"Are you sure you want to cancel this order?\");'>
                             <input type='hidden' name='order_id' value='{$fetch_orders['id']}'>
@@ -214,23 +207,17 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
    </div>
 
 
-<!-- favorites section starts -->
 <div class="favorites-drawer">
    <section>
       <div id="close-favorites"><span>Close</span></div>
       <h3 class="title">My Favorites</h3>
 
       <?php
-      // Handle the removal of an item from favorites
       if (isset($_POST['remove_from_favorites'])) {
-         // Sanitize the product ID before using in query
          $product_id = mysqli_real_escape_string($conn, $_POST['pid']);
-
-         // Delete the item from the favorites table
          $query_remove = "DELETE FROM `favorites` WHERE user_id = $user_id AND product_id = $product_id";
          $result_remove = mysqli_query($conn, $query_remove);
 
-         // Check if the query was successful
          if ($result_remove) {
             echo '<script>alert("Item removed from favorites!");</script>';
          } else {
@@ -239,7 +226,6 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
       }
 
       if ($user_id) {
-         // Sanitize user_id before using in query
          $user_id = mysqli_real_escape_string($conn, $user_id);
          $query_favorites = "SELECT * FROM `favorites` WHERE user_id = $user_id";
          $result_favorites = mysqli_query($conn, $query_favorites);
@@ -252,7 +238,6 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
                   <div class="content">
                      <p><?= htmlspecialchars($fetch_favorites['name']); ?> <span>(₱<?= number_format($fetch_favorites['price'], 2); ?>)</span></p>
 
-                     <!-- Form to remove item from favorites -->
                      <form action="" method="post" class="remove-favorite-form">
                         <input type="hidden" name="pid" value="<?= $fetch_favorites['product_id']; ?>">
                         <button type="submit" class="favorite-btn-remove" name="remove_from_favorites">
@@ -260,7 +245,6 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
                         </button>
                      </form>
 
-                     <!-- Form to add item to cart -->
                      <form action="" method="post">
                         <input type="hidden" name="pid" value="<?= $fetch_favorites['product_id']; ?>">
                         <input type="hidden" name="name" value="<?= htmlspecialchars($fetch_favorites['name']); ?>">
@@ -282,9 +266,6 @@ $header_class = ($current_page == 'index.php') ? 'home-active' : 'non-home-activ
       ?>
    </section>
 </div>
-<!-- favorites section ends -->
-
-<!-- favorites section ends -->
 
 
 
